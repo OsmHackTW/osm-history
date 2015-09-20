@@ -4,8 +4,8 @@ CURL=curl
 #CURL=aria2c -x 4 --retry-wait=120 --max-tries=10
 
 DATA_PATH=data
-DATE2!=echo $(DATE) | sed -e 's/\(....\)\(..\)\(..\)/\1-\2-\3/'
-URL_FULL_HISTORY=http://planet.osm.org/planet/experimental/history-$(DATE2).osm.pbf
+DATE2!=echo $(DATE) | sed -e 's/..\(..\)\(..\)\(..\)/\1\2\3/'
+URL_FULL_HISTORY=http://planet.osm.org/pbf/full-history/history-$(DATE2).osm.pbf
 FILE_FULL_HISTORY=$(DATA_PATH)/history-$(DATE).osh.pbf
 FILE_HISTORY_EXTRACT=$(DATA_PATH)/history-extract-$(DATE).osh.pbf
 
@@ -60,3 +60,4 @@ list_db:
 	echo '\list' | psql -U$(DB_USER)
 
 update: fetch_full_history extract_history create_db import_db
+	echo "data_date = '$(DATE)'" > data_timestamp.py

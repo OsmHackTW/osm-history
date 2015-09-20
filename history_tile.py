@@ -13,7 +13,7 @@ import psycopg2
 import mapnik
 import pylibmc
 
-data_date = '20141124'
+import data_timestamp
 
 # ----------------------------
 
@@ -24,6 +24,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 mapnik.register_fonts('/zdata/osm/font')
 mapnik.register_fonts('/usr/local/lib/X11/fonts')
+mapnik.register_fonts('/usr/local/share/fonts')
 
 # ----------------------------
 # hack to make cherrypy to output sub-second log
@@ -87,7 +88,7 @@ def num2deg(xtile, ytile, zoom):
 class Options:
     def __init__(self):
         self.db_user='osm'
-        self.db_name='osm_%s' % data_date
+        self.db_name='osm_%s' % data_timestamp.data_date
 
         self.dsn = "user='%s' dbname='%s'" % (self.db_user, self.db_name)
         self.dbprefix = 'hist'
@@ -323,7 +324,8 @@ class Cache:
         self.lock = threading.Lock()
         self.mc = pylibmc.Client(['127.0.0.1'], binary=True,
                                  behaviors={"tcp_nodelay": True,
-                                            'hash': 'murmur'})
+                                            #'hash': 'murmur',
+                                            })
 
     @staticmethod
     def cache_key(z, x, y, dt):
@@ -500,7 +502,7 @@ class TileServer:
     def history_tile(self, *args, **argd):
         z, x, y, dt = parse_param(args)
         cherrypy.log('request %d,%d,%d %s ' % (z, x, y, dt))
-        if dt.strftime('%Y%m%d') > data_date:
+        if dt.strftime('%Y%m%d') > data_timestamp.data_date:
             raise cherrypy.HTTPError('404 Not Found')
 
         # last modified time
@@ -567,13 +569,12 @@ def command_line():
 
 def main():
     global options
-    global data_date
     if sys.argv[1:] and sys.argv[1] == 'tile':
         options = Options()
         command_line()
     elif sys.argv[1:] and sys.argv[1] == 'post_import_db':
-        data_date = sys.argv[2]
-        assert re.match(r'\d{8}', data_date)
+        data_timestamp.data_date = sys.argv[2]
+        assert re.match(r'\d{8}', data_timestamp.data_date)
         options = Options()
         post_import_db()
     else:
