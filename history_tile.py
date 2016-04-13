@@ -495,7 +495,8 @@ class TileServer:
         self.db_lock = threading.Lock()
 
     default = cherrypy.tools.staticdir.handler(
-        section='', dir=os.path.join(current_dir, 'static')
+        section='', dir=os.path.join(current_dir, 'static'),
+        index='index.html'
     )
 
     @cherrypy.expose
