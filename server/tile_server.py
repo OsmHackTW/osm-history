@@ -505,6 +505,10 @@ def command_line():
     sys.stdout.write(result)
 
 def main():
+    # It is not threaf-safe. Need to be called once first. Otherwise it may
+    # throw 'AttributeError: _strptime'
+    datetime.datetime.strptime('', '')
+
     global options
     if sys.argv[1:] and sys.argv[1] == 'tile':
         options = Options()
