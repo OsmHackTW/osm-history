@@ -220,9 +220,11 @@ class Requests:
                     todo.append(o)
                 else:
                     remain.append(o)
+            if len(todo) == 1:
+                bx, by, bw, bh = x, y, 1, 1
 
-            print 'requests', len(self.requests), self.requests
-            print (bx, by, bw, bh), 'covers', len(todo), todo
+            cherrypy.log('requests %d %s' % (len(self.requests), self.requests))
+            cherrypy.log('%s covers %d %s' % ((bx, by, bw, bh), len(todo), todo))
 
             self.requests = remain
 
@@ -412,8 +414,19 @@ def query_last_modified_time(dt):
 
     return last_modified_time
 
+def get_data_time_range():
+    con = psycopg2.connect(options.dsn)
+    cur = con.cursor()
+    sql = 'SELECT min(valid_from), max(valid_to) FROM hist_point;'
+    cur.execute(sql)
+    row = cur.fetchone()
+    return row
+
+
 class TileServer:
     def __init__(self):
+        self.data_time_range = get_data_time_range()
+        print self.data_time_range
         self.pool = RendererPool()
         self.db_lock = threading.Lock()
 
@@ -426,9 +439,8 @@ class TileServer:
     def history_tile(self, *args, **argd):
         z, x, y, dt = parse_param(args)
         cherrypy.log('request %d,%d,%d %s ' % (z, x, y, dt))
-        # TODO
-        #if dt.strftime('%Y%m%d') > data_timestamp.data_date:
-        #    raise cherrypy.HTTPError('404 Not Found')
+        if not self.data_time_range[0] <= dt <= self.data_time_range[1]:
+            raise cherrypy.HTTPError('404 Not Found')
 
         # last modified time
         # Note, this may miss 1 second of data.
@@ -470,7 +482,6 @@ class TileServer:
 
 def server():
     cherrypy.config.update({
-        #'server.socket_host': '192.168.0.254',
         'server.socket_host': '0.0.0.0',
         'server.socket_port': 8080,
         #'server.thread_pool': 1,
