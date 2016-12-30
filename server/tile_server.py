@@ -94,7 +94,7 @@ class Options:
         self.dbprefix = 'hist'
         self.viewprefix = 'hist_view'
         self.date = ''
-        self.style = '/web/openstreetmap-carto/style.xml'
+        self.style = '/server/openstreetmap-carto/style.xml'
         self.size = 256, 256
 
         # TODO
@@ -260,8 +260,11 @@ class Renderer:
 
     def init_mapnik(self):
         style = file(options.style).read()
-        style = style.replace('"dbname": "gis"', '"dbname": "%s"' % options.db_name)
-        style = style.replace('"dbname"><![CDATA[gis]]>', '"dbname"><![CDATA[%s]]>' % options.db_name)
+        style = style.replace('@HOST@', options.db_host)
+        style = style.replace('@PORT@', options.db_port)
+        style = style.replace('@USER@', options.db_user)
+        style = style.replace('@DBNAME@', options.db_name)
+        style = style.replace('@PASSWORD@', options.db_password)
         for type in ('point', 'line', 'roads', 'polygon'):
             style = style.replace('planet_osm_%s' % type,
                                   self.viewprefix + '_' + type)
@@ -271,7 +274,7 @@ class Renderer:
         m.buffer_size = 128
         # mapnik takes 700ms in db init
 	strict = False
-        mapnik.load_map_from_string(m, style, strict, '/web/openstreetmap-carto')
+        mapnik.load_map_from_string(m, style, strict, '/server/openstreetmap-carto')
 
         m.resize(tile_size, tile_size)
 

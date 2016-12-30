@@ -6,7 +6,7 @@ set -x -e
 docker run -t -i --rm \
     --link ${POSTGIS_INSTANCE}:pg \
     --link my-memcache:memcache \
-    --name osm-history-web \
-    -v /home/kcwu/osm-history:/web/osm-history \
+    --name osm-history-server \
+    -v $PWD/server:/server/osm-history/server \
     -p 80:8080 \
     kcwu/osm-history-server

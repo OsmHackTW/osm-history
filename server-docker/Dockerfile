@@ -16,7 +16,10 @@ RUN apt-get install -y curl unzip \
 
 RUN apt-get install -y npm \
  && ln -s /usr/bin/nodejs /usr/bin/node \
- && npm install -g carto
+ && npm install -g carto \
+ && cd /server/openstreetmap-carto \
+ && sed -i -e 's/"dbname": "gis"/"host": "@HOST@", "port": "@PORT@", "user": "@USER@", "password": "@PASSWORD@", "dbname":"@DBNAME@"/' project.mml \
+ && carto project.mml > style.xml
 
 # font for 16.04
 #RUN apt-get install -y fonts-noto-cjk fonts-noto-hinted fonts-noto-unhinted ttf-unifont
@@ -32,19 +35,14 @@ RUN apt-get install -y \
 	fonts-tibetan-machine \
 	fonts-droid
 
-# supervisor
-ADD supervisord.conf /etc/supervisord.conf
-RUN apt-get install -y supervisor
-  
-ADD datasource-settings.sh /server/datasource-settings.sh
-RUN chmod 755 /server/datasource-settings.sh \
- && chown -R www-data /server/openstreetmap-carto
-
 # my tile server
 RUN apt-get install -y \
+	supervisor \
+	\
 	python-psycopg2 \
 	python-pylibmc \
 	python-cherrypy3
+ADD supervisord.conf /etc/supervisord.conf
 
 WORKDIR /server
 RUN git clone https://github.com/OsmHackTW/osm-history.git \
