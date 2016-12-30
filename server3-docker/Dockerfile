@@ -24,6 +24,7 @@ RUN cd /server/openstreetmap-carto \
 RUN apt-get install -y npm \
  && ln -s /usr/bin/nodejs /usr/bin/node \
  && npm install -g carto \
+ && npm cache clean \
  && cd /server/openstreetmap-carto \
  && sed -i -e 's/dbname: "gis"/host: "@HOST@"\n    port: "@PORT@"\n    user: "@USER@"\n    password: "@PASSWORD@"\n    dbname: "@DBNAME@"/' project.mml \
  && carto project.mml > style.xml
@@ -41,12 +42,12 @@ RUN apt-get install -y \
 ADD supervisord.conf /etc/supervisord.conf
 
 WORKDIR /server
-RUN git clone https://github.com/OsmHackTW/osm-history.git \
+RUN git clone --depth 1 https://github.com/OsmHackTW/osm-history.git \
  && cd /server/osm-history/server/static \
- && git clone https://github.com/Leaflet/Leaflet.fullscreen.git \
- && git clone https://github.com/turban/Leaflet.Sync.git \
- && git clone https://github.com/ebrelsford/Leaflet.loading.git \
- && git clone https://github.com/mlevans/leaflet-hash.git
+ && git clone --depth 1 https://github.com/Leaflet/Leaflet.fullscreen.git \
+ && git clone --depth 1 https://github.com/turban/Leaflet.Sync.git \
+ && git clone --depth 1 https://github.com/ebrelsford/Leaflet.loading.git \
+ && git clone --depth 1 https://github.com/mlevans/leaflet-hash.git
 
 # Clean up
 RUN apt-get clean \
