@@ -1,0 +1,12 @@
+[submodule "server/static/Leaflet.fullscreen"]
+	path = server/static/Leaflet.fullscreen
+	url = https://github.com/Leaflet/Leaflet.fullscreen.git
+[submodule "server/static/leaflet-hash"]
+	path = server/static/leaflet-hash
+	url = https://github.com/mlevans/leaflet-hash.git
+[submodule "server/static/Leaflet.loading"]
+	path = server/static/Leaflet.loading
+	url = https://github.com/ebrelsford/Leaflet.loading.git
+[submodule "server/static/Leaflet.Sync"]
+	path = server/static/Leaflet.Sync
+	url = https://github.com/turban/Leaflet.Sync.git
