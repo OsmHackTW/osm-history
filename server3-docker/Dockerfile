@@ -6,12 +6,20 @@ RUN apt-get update \
  && apt-get install -y git-core
 
 # Install openstreetmap-carto
-# TODO clip shapefile
 ENV OSM_CARTO_VERSION=v3.0.1
-RUN apt-get install -y curl unzip \
- && git clone --branch ${OSM_CARTO_VERSION} https://github.com/gravitystorm/openstreetmap-carto.git /server/openstreetmap-carto
- && cd /server/openstreetmap-carto \
- && ./scripts/get-shapefiles.py
+RUN git clone --depth 1 --branch ${OSM_CARTO_VERSION} https://github.com/gravitystorm/openstreetmap-carto.git /server/openstreetmap-carto
+
+# Fetch and clip shapefiles
+RUN cd /server/openstreetmap-carto \
+ && apt-get install -y curl gdal-bin \
+ && ./scripts/get-shapefiles.py --remove \
+ && cd data \
+ && for dir in *; \
+	do ogr2ogr -s_srs EPSG:3857 -t_srs EPSG:4326 -clipdst 110 15 135 35 $dir.4326 $dir \
+	&& rm -rf $dir \
+	&& ogr2ogr -s_srs EPSG:4326 -t_srs EPSG:3857 $dir $dir.4326 \
+	&& rm -rf $dir.4326 ; done \
+ && shapeindex --shape_files */*.shp
 
 RUN apt-get install -y npm \
  && ln -s /usr/bin/nodejs /usr/bin/node \
