@@ -1,4 +1,4 @@
-FROM osmtw/mapnik2:v2.2.0
+FROM osmtw/mapnik3:v3.0.9
 MAINTAINER Kuang-che Wu <kcwu@csie.org>
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -7,32 +7,21 @@ RUN apt-get update \
 
 # Install openstreetmap-carto
 # TODO clip shapefile
-ENV OSM_CARTO_VERSION=v2.39.0
+ENV OSM_CARTO_VERSION=v3.0.1
 RUN apt-get install -y curl unzip \
- && git clone --depth 1 --branch ${OSM_CARTO_VERSION} https://github.com/gravitystorm/openstreetmap-carto.git /server/openstreetmap-carto \
+ && git clone --branch ${OSM_CARTO_VERSION} https://github.com/gravitystorm/openstreetmap-carto.git /server/openstreetmap-carto
  && cd /server/openstreetmap-carto \
- && ./get-shapefiles.sh \
- && rm data/*.zip data/*.tgz
+ && ./scripts/get-shapefiles.py
 
 RUN apt-get install -y npm \
  && ln -s /usr/bin/nodejs /usr/bin/node \
  && npm install -g carto \
  && cd /server/openstreetmap-carto \
- && sed -i -e 's/"dbname": "gis"/"host": "@HOST@", "port": "@PORT@", "user": "@USER@", "password": "@PASSWORD@", "dbname":"@DBNAME@"/' project.mml \
+ && sed -i -e 's/dbname: "gis"/host: "@HOST@"\n    port: "@PORT@"\n    user: "@USER@"\n    password: "@PASSWORD@"\n    dbname: "@DBNAME@"/' project.mml \
  && carto project.mml > style.xml
 
 # font
-RUN apt-get install -y \
-	ttf-unifont \
-	fonts-sipa-arundina \
-	ttf-tamil-fonts \
-	fonts-taml-tscu \
-	ttf-indic-fonts-core \
-	ttf-kannada-fonts \
-	fonts-sil-padauk \
-	fonts-khmeros \
-	fonts-tibetan-machine \
-	fonts-droid
+RUN apt-get install -y fonts-noto-cjk fonts-noto-hinted fonts-noto-unhinted ttf-unifont
 
 # my tile server
 RUN apt-get install -y \
