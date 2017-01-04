@@ -6,13 +6,13 @@
 POSTGIS_INSTANCE=${1:-"osmdb"}
 PBF=${2:-"$PWD/data/history-extract.osh.pbf"}
 
-docker exec -ti osmdb psql -U postgres -c 'CREATE EXTENSION postgis;'
-docker exec -ti osmdb psql -U postgres -c 'CREATE EXTENSION hstore;'
-docker exec -ti osmdb psql -U postgres -c 'CREATE EXTENSION btree_gist;'
+docker exec osmdb psql -U postgres -c 'CREATE EXTENSION postgis;'
+docker exec osmdb psql -U postgres -c 'CREATE EXTENSION hstore;'
+docker exec osmdb psql -U postgres -c 'CREATE EXTENSION btree_gist;'
 
 FILE=/history.osh.pbf
 
-docker run -ti --rm \
+docker run --rm \
     --link ${POSTGIS_INSTANCE}:pg \
     -v $PBF:$FILE \
     --name osm-history-importer \
