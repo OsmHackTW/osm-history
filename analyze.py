@@ -5,17 +5,18 @@ import json
 import psycopg2
 import psycopg2.errorcodes
 
-data_date = '20140203'
-db_user='osm'
-db_name='osm_%s' % data_date
+db_user='osm_history'
+db_name='osm_history'
 dsn = "user='%s' dbname='%s'" % (db_user, db_name)
 
 def find_queries(fp):
     """
     How to collect log:
         Modify /usr/local/pgsql/data/postgresql.conf
-        log_destination = 'stderr'
-        log_min_duration_statement = 100
+            log_destination = 'stderr'
+            log_min_duration_statement = 100
+        Maybe also set log_directory and log_filename
+        
     """
     state = ''
     for line in fp:
@@ -34,7 +35,7 @@ def find_queries(fp):
                 continue
             state = ''
 
-            m = re.match(r'duration: (\d+\.\d+) ms  (execute.*?|statement): (.+)', msg)
+            m = re.match(r'duration: (\d+\.\d+) ms  (execute.*?|statement)[^:]*?: (.+)', msg)
             if m:
                 duration = float(m.group(1))
                 statement = m.group(3)
@@ -48,6 +49,10 @@ def find_queries(fp):
 
         elif state in ('log_statement', 'log_duration_statement'):
             statement += line
+
+    if state == 'log_duration_statement':
+        yield statement, duration
+        state = ''
 
 def explain(cur, sql):
     # for human read
@@ -91,7 +96,7 @@ def guess_name(plans):
     for p in plans:
         #print json.dumps(p, indent=4)
         if 'Relation Name' in p:
-            assert table == ''
+            assert table == '' or table == p['Relation Name']
             table = p['Relation Name']
     assert table
 
@@ -161,9 +166,9 @@ def try_to_optimize(cur, query):
     print '-' * 30, 'explain original'
     exp1 = explain(cur, query)
     print
-    #print json.dumps(exp1, indent=4)
+    print json.dumps(exp1, indent=4)
 
-    t1 = exp1['Total Runtime']
+    t1 = exp1['Execution Time']
     if t1 < 30:
         print 'ALREADY optimized?'
         return
@@ -211,7 +216,7 @@ def try_to_optimize(cur, query):
             exp2 = explain(cur, query)
             print
 
-            t2 = exp2['Total Runtime']
+            t2 = exp2['Execution Time']
             print t1, '->', t2
             if t2 < t1:
                 print 'GOOD'
